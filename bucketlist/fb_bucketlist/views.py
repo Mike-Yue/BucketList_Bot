@@ -18,6 +18,11 @@ fh.setFormatter(loggingFormat)
 # Create your views here.
 class bucketListBotView(generic.View):
     def get(self, request, *args, **kwargs):
-        LOGGER.info("Reached bucketlistbot Webhooks")
-        return HttpResponse("Hello World")
+        
+        if self.request.GET['hub.verify_token'] == '0808':
+            LOGGER.info("Valid verify token received for webhook")
+            return HttpResponse(self.request.GET['hub.challenge'])
+        else:
+            LOGGER.error("Invalid verify token received")
+            return HttpResponse('Error, invalid token')
 
