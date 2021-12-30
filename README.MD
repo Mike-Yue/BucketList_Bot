@@ -17,3 +17,7 @@
 - Allow the user/users to upload photos of the activity so that there's a timeline/visual indicator of these bucket list activites being done (big big strech goal)
 - For activities that have locations provided, provide a google maps integration widget to show distance from user's home location
 - Activities should be filtered into categories (Food, Drink, Activity, Other etc etc)
+
+### Issues encountered during development that should be noted
+- PAGE_ACCESS_TOKEN environment variable is set by Apache in /etc/apache/envvars
+- During Apache HTTPS setup, use fullchain.pem instead of cert.pem for SSLCertificateFile field

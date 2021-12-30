@@ -21,24 +21,43 @@ class ApiHelper():
         fh.setFormatter(loggingFormat)
 
         self.facebookMessageBaseUrl = "https://graph.facebook.com/v2.6/me/messages?access_token="
+        self.facebookUserDetailsBaseUrl = "https://graph.facebook.com/v2.6/"
         self.jsonHeadersType = {
             "Content-Type": "application/json"
         }
-
-    def constructPostMessageUrl(self):
+        
+    def getPageAccessToken(self):
         if os.environ.get("PAGE_ACCESS_TOKEN") is None:
             raise KeyError("PAGE ACCESS TOKEN VARIABLE NOT SET")
-        return self.facebookMessageBaseUrl + os.environ.get("PAGE_ACCESS_TOKEN")
+        return os.environ.get("PAGE_ACCESS_TOKEN")
 
+    def constructPostMessageUrl(self):
+        return self.facebookMessageBaseUrl + self.getPageAccessToken()
+    
+    def getSenderName(self, fbId):
+        try:
+            userDetailParams = {
+                "fields": "first_name",
+                "access_token": self.getPageAccessToken()
+            }
+            userDetailsUrl = self.facebookUserDetailsBaseUrl + fbId
+            userDetails = requests.get(userDetailsUrl, userDetailParams).json()
+            return userDetails["first_name"]
+        except KeyError:
+            self.LOGGER.error("PAGE ACCESS TOKEN VARIABLE NOT SET")
+        except requests.HTTPError as e:
+            self.LOGGER.error("GET user details failed with error: " + str(e))
+    
     def sendFacebookMessage(self, fbId, receivedMessage):
         try:
             facebookMessageUrl = self.constructPostMessageUrl()
+            message = "Hi {}, {}".format(self.getSenderName(fbId), receivedMessage)
             responseMessage = json.dumps(
                 {"recipient":{"id": fbId},
-                "message": {"text": receivedMessage}}
+                "message": {"text": message}}
             )
             status = requests.post(facebookMessageUrl, headers=self.jsonHeadersType, data=responseMessage)
-            self.LOGGER.info(str(status.json()))
+            self.LOGGER.info("Sent Message: {}".format(message))
         except KeyError:
             self.LOGGER.error("PAGE ACCESS TOKEN VARIABLE NOT SET")
         except requests.HTTPError as e:
