@@ -6,6 +6,7 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 import logging
 import os
+import fb_bucketlist.helper.api as apiHelper
 
 LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.INFO)
@@ -34,5 +35,6 @@ class bucketListBotView(generic.View):
         for entry in incoming_message["entry"]:
             for message in entry["messaging"]:
                 if "message" in message:
-                    LOGGER.info("Received message: " + message)
+                    LOGGER.info("Received message: " + message["message"]["text"])
+                    apiHelper.sendFacebookMessage(message["sender"]["id"], message["message"]["text"])
         return HttpResponse()
