@@ -6,7 +6,10 @@ import os
 
 LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.INFO)
-fh = logging.FileHandler(os.getcwd() + "/application_log.log")
+if (os.name == 'nt'):
+    fh = logging.FileHandler("application_log.log")
+else:
+    fh = logging.FileHandler("/var/log/bucketlistbot.log")
 fh.setLevel(logging.INFO)
 LOGGER.addHandler(fh)
 loggingFormat = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
