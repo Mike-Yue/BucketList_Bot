@@ -27,9 +27,6 @@ class bucketListBotView(generic.View):
             LOGGER.info("Valid verify token received for webhook")
             return HttpResponse(self.request.GET['hub.challenge'])
         else:
-            mapHelper = MapHelper()
-            test = mapHelper.getLocation()
-            print("poggers {}".format(test))
             LOGGER.error("Invalid verify token received")
             return HttpResponse('Error, invalid token')
     
@@ -43,8 +40,9 @@ class bucketListBotView(generic.View):
                     apiHelper = ApiHelper()
                     if "maps" in message["message"]["text"]:
                         mapHelper = MapHelper()
-                        address = mapHelper.getLocation(message["message"]["text"])
-                        apiHelper.sendFacebookMessage(message["sender"]["id"], address)
+                        locationDetails = mapHelper.getLocationDetails(message["message"]["text"])
+                        responseStr = "is {} at {} the place you're trying to go to?".format(locationDetails["name"], locationDetails["formatted_address"])
+                        apiHelper.sendFacebookMessage(message["sender"]["id"], responseStr)
                     else:
                         apiHelper.sendFacebookMessage(message["sender"]["id"], message["message"]["text"])
         return HttpResponse()

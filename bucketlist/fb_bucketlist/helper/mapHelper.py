@@ -5,6 +5,7 @@ import os
 
 class MapHelper():
     
+    # Method used to parse addresses and URLs
     def findNthOccurenceOfSubString(self, baseString, subString, n):
         start = baseString.find(subString)
         while start >= 0 and n > 1:
@@ -26,17 +27,20 @@ class MapHelper():
         print(urllib.parse.unquote(longUrl[:endIndex]))
         return urllib.parse.unquote(longUrl[:endIndex])
     
-    def getLocation(self, mapsUrl): 
+    # gmaps.places returns a list of locations that matches our search term
+    # Return the first one since that's most likely the one that we meant
+    # Will expand to return all locations at a future date
+    def getLocationDetails(self, mapsUrl): 
         key = os.environ.get("MAPS_API_KEY")
         gmaps = googlemaps.Client(key=key)
         test_url = mapsUrl
         session = requests.Session()
         resp = session.head(test_url, allow_redirects=True)
-        print(resp.url)
         locationName = self.getLocationNameFromUrl(resp.url)
-        coordinatesTuple = self.getCoordinatesFromUrl(resp.url)
-        print(coordinatesTuple)
-        return gmaps.places(query=locationName)["results"][0]["formatted_address"]
+        # Aside from name and formatted_address, can also access key "types" to get a list
+        # of categories this location is tagged with, such as ["Restaurant", "Food", "Establishment"]
+        # Can also access the "business_status" field to see if location is OPERATIONAL, which may be helpful
+        return gmaps.places(query=locationName)["results"][0]
         
         
 
