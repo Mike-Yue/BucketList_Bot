@@ -1,9 +1,20 @@
+from django.conf import settings
+
 import googlemaps
 import requests
 import urllib.parse
 import os
 
 class MapHelper():
+    
+    def __init__(self):
+        if (os.environ.get("MAPS_API_KEY")):
+            self.gmaps = googlemaps.Client(key=os.environ.get("MAPS_API_KEY"))
+        else:
+            # For local window dev just read it from a txt file
+            with open(os.path.join(settings.BASE_DIR, "maps_api_key.txt")) as f:
+                key = f.read()
+            self.gmaps = googlemaps.Client(key=key)
     
     # Method used to parse addresses and URLs
     def findNthOccurenceOfSubString(self, baseString, subString, n):
@@ -30,8 +41,6 @@ class MapHelper():
     # Return the first one since that's most likely the one that we meant
     # Will expand to return all locations at a future date
     def getLocationDetails(self, mapsUrl): 
-        key = os.environ.get("MAPS_API_KEY")
-        gmaps = googlemaps.Client(key=key)
         session = requests.Session()
         resp = session.head(mapsUrl, allow_redirects=True)
         coordinates = self.getCoordinatesFromUrl(resp.url)
@@ -41,7 +50,7 @@ class MapHelper():
         # of categories this location is tagged with, such as ["Restaurant", "Food", "Establishment"]
         # For full list of types, refer to https://developers.google.com/maps/documentation/places/web-service/supported_types
         # Can also access the "business_status" field to see if location is OPERATIONAL, which may be helpful
-        return gmaps.places(query=locationName, location=coordinates)["results"][0]
+        return self.gmaps.places(query=locationName, location=coordinates)["results"][0]
         
         
 

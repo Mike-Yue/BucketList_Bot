@@ -8,6 +8,7 @@ import logging
 import os
 from .helper.apiHelper import ApiHelper
 from .helper.mapHelper import MapHelper
+from .helper.stringOutputHelper import StringOutputHelper
 
 LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.INFO)
@@ -39,8 +40,10 @@ class bucketListBotView(generic.View):
                     apiHelper = ApiHelper()
                     if "maps" in message["message"]["text"]:
                         mapHelper = MapHelper()
+                        baseResponseString = "".join((StringOutputHelper.USER_GREETING_OUTPUT.value, StringOutputHelper.CONFIRM_GOOGLE_MAPS_OUTPUT.value))
                         locationDetails = mapHelper.getLocationDetails(message["message"]["text"])
-                        responseStr = "can you confirm that {} at {} the place you're trying to go to?".format(locationDetails["name"], locationDetails["formatted_address"])
+                        userFirstName = apiHelper.getSenderName(message["sender"]["id"])
+                        responseStr = baseResponseString.format(userFirstName, locationDetails["name"], locationDetails["formatted_address"])
                         apiHelper.sendFacebookMessage(message["sender"]["id"], responseStr)
                     else:
                         apiHelper.sendFacebookMessage(message["sender"]["id"], message["message"]["text"])

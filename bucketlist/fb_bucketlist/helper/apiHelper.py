@@ -48,16 +48,16 @@ class ApiHelper():
         except requests.HTTPError as e:
             self.LOGGER.error("GET user details failed with error: " + str(e))
     
-    def sendFacebookMessage(self, fbId, receivedMessage):
+    def sendFacebookMessage(self, fbId, messageToSend):
         try:
             facebookMessageUrl = self.constructPostMessageUrl()
-            message = "Hi {}, {}".format(self.getSenderName(fbId), receivedMessage)
+            # message = "Hi {}, {}".format(self.getSenderName(fbId), receivedMessage)
             responseMessage = json.dumps(
                 {"recipient":{"id": fbId},
-                "message": {"text": message}}
+                "message": {"text": messageToSend}}
             )
             status = requests.post(facebookMessageUrl, headers=self.jsonHeadersType, data=responseMessage)
-            self.LOGGER.info("Sent Message: {}".format(message))
+            self.LOGGER.info("Sent Message: {} with status".format(messageToSend, status))
         except KeyError:
             self.LOGGER.error("PAGE ACCESS TOKEN VARIABLE NOT SET")
         except requests.HTTPError as e:
