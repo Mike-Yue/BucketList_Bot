@@ -7,6 +7,7 @@ import json
 import logging
 import os
 from .helper.apiHelper import ApiHelper
+from .helper.mapHelper import MapHelper
 
 LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.INFO)
@@ -26,6 +27,9 @@ class bucketListBotView(generic.View):
             LOGGER.info("Valid verify token received for webhook")
             return HttpResponse(self.request.GET['hub.challenge'])
         else:
+            mapHelper = MapHelper()
+            test = mapHelper.getLocation()
+            print("poggers {}".format(test))
             LOGGER.error("Invalid verify token received")
             return HttpResponse('Error, invalid token')
     
@@ -37,5 +41,10 @@ class bucketListBotView(generic.View):
                 if "message" in message:
                     LOGGER.info("Received message: " + message["message"]["text"])
                     apiHelper = ApiHelper()
-                    apiHelper.sendFacebookMessage(message["sender"]["id"], message["message"]["text"])
+                    if "maps" in message["message"]["text"]:
+                        mapHelper = MapHelper()
+                        address = mapHelper.getLocation(message["message"]["text"])
+                        apiHelper.sendFacebookMessage(message["sender"]["id"], address)
+                    else:
+                        apiHelper.sendFacebookMessage(message["sender"]["id"], message["message"]["text"])
         return HttpResponse()

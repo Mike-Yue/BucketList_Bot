@@ -21,3 +21,8 @@
 ### Issues encountered during development that should be noted
 - PAGE_ACCESS_TOKEN environment variable is set by Apache in /etc/apache/envvars
 - During Apache HTTPS setup, use fullchain.pem instead of cert.pem for SSLCertificateFile field
+
+### General debugging tips
+- /var/log/apache2/error.log for Apache errors
+- /var/log/bucketlistbot.log for Django logs
+- `sudo service apache2 restart` to restart the Apache service
