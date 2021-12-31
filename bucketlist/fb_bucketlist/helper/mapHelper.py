@@ -24,7 +24,6 @@ class MapHelper():
         startIndex = self.findNthOccurenceOfSubString(longUrl, "https://www.google.com/maps/place/", 1)
         longUrl = longUrl[startIndex+len("https://www.google.com/maps/place/"):]
         endIndex = self.findNthOccurenceOfSubString(longUrl, "/", 1)
-        print(urllib.parse.unquote(longUrl[:endIndex]))
         return urllib.parse.unquote(longUrl[:endIndex])
     
     # gmaps.places returns a list of locations that matches our search term
@@ -33,14 +32,16 @@ class MapHelper():
     def getLocationDetails(self, mapsUrl): 
         key = os.environ.get("MAPS_API_KEY")
         gmaps = googlemaps.Client(key=key)
-        test_url = mapsUrl
         session = requests.Session()
-        resp = session.head(test_url, allow_redirects=True)
+        resp = session.head(mapsUrl, allow_redirects=True)
+        coordinates = self.getCoordinatesFromUrl(resp.url)
         locationName = self.getLocationNameFromUrl(resp.url)
+        
         # Aside from name and formatted_address, can also access key "types" to get a list
         # of categories this location is tagged with, such as ["Restaurant", "Food", "Establishment"]
+        # For full list of types, refer to https://developers.google.com/maps/documentation/places/web-service/supported_types
         # Can also access the "business_status" field to see if location is OPERATIONAL, which may be helpful
-        return gmaps.places(query=locationName)["results"][0]
+        return gmaps.places(query=locationName, location=coordinates)["results"][0]
         
         
 

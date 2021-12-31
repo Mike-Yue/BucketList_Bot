@@ -30,7 +30,6 @@ class bucketListBotView(generic.View):
             LOGGER.error("Invalid verify token received")
             return HttpResponse('Error, invalid token')
     
-    
     def post(self, request, *args, **kwargs):
         incoming_message = json.loads(self.request.body.decode("utf-8"))
         for entry in incoming_message["entry"]:
@@ -41,7 +40,7 @@ class bucketListBotView(generic.View):
                     if "maps" in message["message"]["text"]:
                         mapHelper = MapHelper()
                         locationDetails = mapHelper.getLocationDetails(message["message"]["text"])
-                        responseStr = "is {} at {} the place you're trying to go to?".format(locationDetails["name"], locationDetails["formatted_address"])
+                        responseStr = "can you confirm that {} at {} the place you're trying to go to?".format(locationDetails["name"], locationDetails["formatted_address"])
                         apiHelper.sendFacebookMessage(message["sender"]["id"], responseStr)
                     else:
                         apiHelper.sendFacebookMessage(message["sender"]["id"], message["message"]["text"])
