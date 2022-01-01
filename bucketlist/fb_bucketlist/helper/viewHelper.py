@@ -77,7 +77,7 @@ def confirmDate(fbId, message, userStates, activity=None):
 def confirmTime(fbId, message, userStates, activity=None):
     #TODO: Build activity model for Date since User provided a date. Handle usecase if no date is provided
     if message and convertDateFormat(message) is not None:
-        activity.activity_date = message.strip()
+        activity.activity_date = convertDateFormat(message.strip())
         activity.save()
     apiHelper.sendFacebookMessage(fbId, stateToOutputMessageMapping[userStates[fbId]])
     return True
