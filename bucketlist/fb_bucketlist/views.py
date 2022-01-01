@@ -6,10 +6,7 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 import logging
 import os
-from .helper.apiHelper import ApiHelper
-from .helper.mapHelper import MapHelper
 from .helper.viewHelper import ViewHelper
-from .helper.stringOutputHelper import StringOutputHelper
 
 LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.INFO)
@@ -26,6 +23,7 @@ fh.setFormatter(loggingFormat)
 class bucketListBotView(generic.View):
     
     viewHelper = ViewHelper()
+    userStates = {}
     
     def get(self, request, *args, **kwargs):
         if self.request.GET.get('hub.verify_token', "1234") == '0808':
@@ -33,6 +31,7 @@ class bucketListBotView(generic.View):
             return HttpResponse(self.request.GET['hub.challenge'])
         else:
             LOGGER.error("Invalid verify token received")
+            self.viewHelper.trackStateAndSendMessage("1", "maps", self.userStates)
             return HttpResponse('Error, invalid token')
     
     def post(self, request, *args, **kwargs):
@@ -41,18 +40,5 @@ class bucketListBotView(generic.View):
             for message in entry["messaging"]:
                 if "message" in message:
                     LOGGER.info("Received message: " + message["message"]["text"])
-                    self.viewHelper.trackStateAndSendMessage(message["sender"]["id"], message["message"]["text"])
-                    
-                    
-                    
-                    # apiHelper = ApiHelper()
-                    # if "maps" in message["message"]["text"]:
-                    #     mapHelper = MapHelper()
-                    #     baseResponseString = "".join((StringOutputHelper.USER_GREETING_OUTPUT.value, StringOutputHelper.CONFIRM_GOOGLE_MAPS_OUTPUT.value))
-                    #     locationDetails = mapHelper.getLocationDetails(message["message"]["text"])
-                    #     userFirstName = apiHelper.getSenderName(message["sender"]["id"])
-                    #     responseStr = baseResponseString.format(userFirstName, locationDetails["name"], locationDetails["formatted_address"])
-                    #     apiHelper.sendFacebookMessage(message["sender"]["id"], responseStr)
-                    # else:
-                    #     apiHelper.sendFacebookMessage(message["sender"]["id"], message["message"]["text"])
+                    self.viewHelper.trackStateAndSendMessage(message["sender"]["id"], message["message"]["text"], self.userStates)
         return HttpResponse()

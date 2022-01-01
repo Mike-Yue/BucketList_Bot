@@ -2,6 +2,8 @@ from enum import Enum
 import logging
 import os
 from fb_bucketlist.helper.apiHelper import ApiHelper
+from fb_bucketlist.helper.mapHelper import MapHelper
+from fb_bucketlist.helper.stringOutputHelper import StringOutputHelper
 
 
 LOGGER = logging.getLogger(__name__)
@@ -30,28 +32,39 @@ nextStateMapping = {
     States.CONFIRM_ACTIVITY_TYPE: States.CONFIRM_ACTIVITY_CREATION
 }
 
+stateToOutputMessageMapping = {
+    States.CONFIRM_LOCATION: "".join((StringOutputHelper.USER_GREETING_OUTPUT.value, StringOutputHelper.CONFIRM_GOOGLE_MAPS_OUTPUT.value)),
+    States.CONFIRM_DATE: StringOutputHelper.CONFIRM_DATE.value,
+    States.CONFIRM_TIME: StringOutputHelper.CONFIRM_TIME.value,
+    States.CONFIRM_ACTIVITY_TYPE: StringOutputHelper.CONFIRM_ACTIVITY_TYPE.value,
+    States.CONFIRM_ACTIVITY_CREATION: StringOutputHelper.FINALIZE_GOOGLE_MAPS_ACTIVITY.value
+}
+
+apiHelper = ApiHelper()
+mapHelper = MapHelper()
+
 class ViewHelper():
     
-    userStates = {}
-    
-    def trackStateAndSendMessage(self, fbId, messageReceived):
+    def trackStateAndSendMessage(self, fbId, messageReceived, userStates):
+        print(userStates)
         try:
-            if fbId not in self.userStates and "maps" in messageReceived:
-                self.userStates[fbId] = States.CONFIRM_LOCATION
-                LOGGER.info("User {} currently at state {}".format(fbId, self.userStates[fbId].value))
-                #TODO: Send message
-                ApiHelper().sendFacebookMessage(fbId, "User {} currently at state {}".format(fbId, self.userStates[fbId].value))
+            if fbId not in userStates and "maps" in messageReceived:
+                userStates[fbId] = States.CONFIRM_LOCATION
+                locationDetails = mapHelper.getLocationDetails(messageReceived)
+                userFirstName = apiHelper.getSenderName(fbId)
+                apiHelper.sendFacebookMessage(fbId, stateToOutputMessageMapping[userStates[fbId]].format(userFirstName, locationDetails["name"], locationDetails["formatted_address"]))
                 #Move state to next
-                self.userStates[fbId] = nextStateMapping(self.userStates[fbId])
-            elif self.userStates[fbId] not in nextStateMapping:
-                #TODO Send confirmation message
-                ApiHelper().sendFacebookMessage(fbId, "User {} currently at state {} and has finished setup".format(fbId, self.userStates[fbId].value))
+                userStates[fbId] = nextStateMapping[userStates[fbId]]
+            elif fbId not in userStates:
+                apiHelper.sendFacebookMessage(fbId, messageReceived)
+            elif userStates[fbId] not in nextStateMapping:
+                apiHelper.sendFacebookMessage(fbId, stateToOutputMessageMapping[userStates[fbId]])
                 #Remove userID from state as the conversation is now complete
-                self.userStates.pop(fbId)
+                userStates.pop(fbId)
             else:
-                #TODO: send message
-                ApiHelper().sendFacebookMessage(fbId, "User {} currently at state {}".format(fbId, self.userStates[fbId].value))
+                apiHelper.sendFacebookMessage(fbId, stateToOutputMessageMapping[userStates[fbId]])
                 #Move state to next
-                self.userStates[fbId] = nextStateMapping(self.userStates[fbId])
+                userStates[fbId] = nextStateMapping[userStates[fbId]]
         except Exception as e:
+            print(e)
             LOGGER.error(str(e))
