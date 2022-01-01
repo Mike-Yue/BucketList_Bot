@@ -33,8 +33,8 @@ class bucketListBotView(generic.View):
         else:
             LOGGER.error("Invalid verify token received")
             mapHelper = MapHelper()
-            locationDetails = mapHelper.getLocationDetails('https://goo.gl/maps/8By4gqDYErQRDzwVA')
-            self.viewHelper.trackStateAndSendMessage("1", "maps", self.userStates)
+            locationDetails = mapHelper.getLocationDetails('https://goo.gl/maps/ZAebeaSUgRNCh4xb9')
+            self.viewHelper.trackStateAndSendMessage("1", "https://goo.gl/maps/8By4gqDYErQRDzwVA", self.userStates)
             return HttpResponse('Error, invalid token')
     
     def post(self, request, *args, **kwargs):
@@ -42,6 +42,8 @@ class bucketListBotView(generic.View):
         for entry in incoming_message["entry"]:
             for message in entry["messaging"]:
                 if "message" in message:
+                    if "is_echo" in message["message"] and message["message"]["is_echo"]:
+                        continue
                     LOGGER.info("Received message: " + message["message"]["text"])
                     self.viewHelper.trackStateAndSendMessage(message["sender"]["id"], message["message"]["text"], self.userStates)
         return HttpResponse()
