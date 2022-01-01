@@ -76,6 +76,7 @@ def confirmDate(fbId, message, userStates, activity=None):
 
 def confirmTime(fbId, message, userStates, activity=None):
     #TODO: Build activity model for Date since User provided a date. Handle usecase if no date is provided
+    # Also, add a check to make sure the given datetime isn't in the past. Joanne can probably take this
     if message and convertDateFormat(message) is not None:
         activity.activity_date = convertDateFormat(message.strip())
         activity.save()
@@ -142,5 +143,4 @@ class ViewHelper():
                     #Move state to next
                     userStates[fbId] = nextStateMapping[userStates[fbId]]
         except Exception as e:
-            print(e)
             LOGGER.error(str(e))

@@ -21,6 +21,4 @@ class Activity(models.Model):
     activity_address = models.CharField(max_length=511, blank=True, null=True)
     
     def __str__(self):
-        return "Name: {}, Submitted By: {}, Submission Date: {}, Activity Date: {}, Activity Time: {}, Activity Type: {}, Activity Address: {}".format(
-            self.name, self.submitted_by, self.submission_date, self.activity_date, self.activity_time, self.activity_type, self.activity_address
-        )
+        return self.name
