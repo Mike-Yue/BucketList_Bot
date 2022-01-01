@@ -7,6 +7,7 @@ import json
 import logging
 import os
 from .helper.viewHelper import ViewHelper
+from .helper.viewHelper import convertDateFormat
 from .helper.mapHelper import MapHelper
 
 LOGGER = logging.getLogger(__name__)
@@ -33,15 +34,24 @@ class bucketListBotView(generic.View):
         else:
             LOGGER.error("Invalid verify token received")
             mapHelper = MapHelper()
+<<<<<<< HEAD
             locationDetails = mapHelper.getLocationDetails('https://goo.gl/maps/8By4gqDYErQRDzwVA')
             self.viewHelper.trackStateAndSendMessage("1", "maps", self.userStates)
+=======
+            locationDetails = mapHelper.getLocationDetails('https://goo.gl/maps/ZAebeaSUgRNCh4xb9')
+            print(convertDateFormat("09-09-2020"))
+            self.viewHelper.trackStateAndSendMessage("1", "https://goo.gl/maps/8By4gqDYErQRDzwVA", self.userStates)
+>>>>>>> 88ec69d (Fixing echo messages being processed by bot)
             return HttpResponse('Error, invalid token')
     
     def post(self, request, *args, **kwargs):
         incoming_message = json.loads(self.request.body.decode("utf-8"))
         for entry in incoming_message["entry"]:
+            LOGGER.warn(str(entry))
             for message in entry["messaging"]:
                 if "message" in message:
+                    if "is_echo" in message["message"] and message["message"]["is_echo"]:
+                        continue
                     LOGGER.info("Received message: " + message["message"]["text"])
                     self.viewHelper.trackStateAndSendMessage(message["sender"]["id"], message["message"]["text"], self.userStates)
         return HttpResponse()
