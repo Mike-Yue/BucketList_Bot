@@ -35,7 +35,7 @@ class MapHelper():
         startIndex = self.findNthOccurenceOfSubString(longUrl, "https://www.google.com/maps/place/", 1)
         longUrl = longUrl[startIndex+len("https://www.google.com/maps/place/"):]
         endIndex = self.findNthOccurenceOfSubString(longUrl, "/", 1)
-        return urllib.parse.unquote(longUrl[:endIndex])
+        return urllib.parse.unquote(longUrl[:endIndex]).replace("+", " ")
     
     # gmaps.places returns a list of locations that matches our search term
     # Return the first one since that's most likely the one that we meant
