@@ -8,6 +8,7 @@ import logging
 import os
 from .helper.apiHelper import ApiHelper
 from .helper.mapHelper import MapHelper
+from .helper.viewHelper import ViewHelper
 from .helper.stringOutputHelper import StringOutputHelper
 
 LOGGER = logging.getLogger(__name__)
@@ -23,6 +24,9 @@ fh.setFormatter(loggingFormat)
 
 @method_decorator(csrf_exempt, name='dispatch')
 class bucketListBotView(generic.View):
+    
+    viewHelper = ViewHelper()
+    
     def get(self, request, *args, **kwargs):
         if self.request.GET.get('hub.verify_token', "1234") == '0808':
             LOGGER.info("Valid verify token received for webhook")
@@ -37,14 +41,18 @@ class bucketListBotView(generic.View):
             for message in entry["messaging"]:
                 if "message" in message:
                     LOGGER.info("Received message: " + message["message"]["text"])
-                    apiHelper = ApiHelper()
-                    if "maps" in message["message"]["text"]:
-                        mapHelper = MapHelper()
-                        baseResponseString = "".join((StringOutputHelper.USER_GREETING_OUTPUT.value, StringOutputHelper.CONFIRM_GOOGLE_MAPS_OUTPUT.value))
-                        locationDetails = mapHelper.getLocationDetails(message["message"]["text"])
-                        userFirstName = apiHelper.getSenderName(message["sender"]["id"])
-                        responseStr = baseResponseString.format(userFirstName, locationDetails["name"], locationDetails["formatted_address"])
-                        apiHelper.sendFacebookMessage(message["sender"]["id"], responseStr)
-                    else:
-                        apiHelper.sendFacebookMessage(message["sender"]["id"], message["message"]["text"])
+                    self.viewHelper.trackStateAndSendMessage(message["sender"]["id"], message["message"]["text"])
+                    
+                    
+                    
+                    # apiHelper = ApiHelper()
+                    # if "maps" in message["message"]["text"]:
+                    #     mapHelper = MapHelper()
+                    #     baseResponseString = "".join((StringOutputHelper.USER_GREETING_OUTPUT.value, StringOutputHelper.CONFIRM_GOOGLE_MAPS_OUTPUT.value))
+                    #     locationDetails = mapHelper.getLocationDetails(message["message"]["text"])
+                    #     userFirstName = apiHelper.getSenderName(message["sender"]["id"])
+                    #     responseStr = baseResponseString.format(userFirstName, locationDetails["name"], locationDetails["formatted_address"])
+                    #     apiHelper.sendFacebookMessage(message["sender"]["id"], responseStr)
+                    # else:
+                    #     apiHelper.sendFacebookMessage(message["sender"]["id"], message["message"]["text"])
         return HttpResponse()
