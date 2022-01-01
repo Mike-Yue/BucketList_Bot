@@ -117,25 +117,28 @@ mapHelper = MapHelper()
 
 class ViewHelper():
     
+    userToActivityMap = {}
+    
     def trackStateAndSendMessage(self, fbId, messageReceived, userStates):
         try:
-            activity = Activity()
             if fbId not in userStates and "maps" in messageReceived:
+                self.userToActivityMap[fbId] = Activity()
                 userStates[fbId] = States.CONFIRM_LOCATION
-                activity.submission_date = datetime.date.today()
-                activity.submitted_by = apiHelper.getSenderName(fbId)
-                activity.save()
-                if(stateToFunctionMapping[userStates[fbId]](fbId, messageReceived, userStates, activity)):
+                self.userToActivityMap[fbId].submission_date = datetime.date.today()
+                self.userToActivityMap[fbId].submitted_by = apiHelper.getSenderName(fbId)
+                self.userToActivityMap[fbId].save()
+                if(stateToFunctionMapping[userStates[fbId]](fbId, messageReceived, userStates, self.userToActivityMap[fbId])):
                     #Move state to next
                     userStates[fbId] = nextStateMapping[userStates[fbId]]
             elif fbId not in userStates:
                 apiHelper.sendFacebookMessage(fbId, messageReceived)
             elif userStates[fbId] not in nextStateMapping:
-                if(stateToFunctionMapping[userStates[fbId]](fbId, messageReceived, userStates, activity)):
+                if(stateToFunctionMapping[userStates[fbId]](fbId, messageReceived, userStates, self.userToActivityMap[fbId])):
                     #Remove userID from state as the conversation is now complete
                     userStates.pop(fbId)
+                    self.userToActivityMap.pop(fbId)
             else:
-                if(stateToFunctionMapping[userStates[fbId]](fbId, messageReceived, userStates, activity)):
+                if(stateToFunctionMapping[userStates[fbId]](fbId, messageReceived, userStates, self.userToActivityMap[fbId])):
                     #Move state to next
                     userStates[fbId] = nextStateMapping[userStates[fbId]]
         except Exception as e:
