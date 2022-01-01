@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 
 # Create your models here.
 class Activity(models.Model):
@@ -11,9 +12,15 @@ class Activity(models.Model):
         ("Other", "Other")
     )
     
-    name = models.CharField(max_length=255)
-    submitted_by = models.CharField(max_length=255)
-    submission_date = models.DateField()
-    activity_date = models.DateField(blank=True)
-    activity_type = models.CharField(max_length=255, choices=ACTIVITY_TYPE)
-    activity_address = models.CharField(max_length=511, blank=True)
+    name = models.CharField(max_length=255, default="Placeholder")
+    submitted_by = models.CharField(max_length=255, default="Placeholder")
+    submission_date = models.DateField(auto_now_add=timezone.now())
+    activity_date = models.DateField(blank=True, null=True)
+    activity_time = models.TimeField(blank=True, null=True)
+    activity_type = models.CharField(max_length=255, choices=ACTIVITY_TYPE, default="Other")
+    activity_address = models.CharField(max_length=511, blank=True, null=True)
+    
+    def __str__(self):
+        return "Name: {}, Submitted By: {}, Submission Date: {}, Activity Date: {}, Activity Time: {}, Activity Type: {}, Activity Address: {}".format(
+            self.name, self.submitted_by, self.submission_date, self.activity_date, self.activity_time, self.activity_type, self.activity_address
+        )
