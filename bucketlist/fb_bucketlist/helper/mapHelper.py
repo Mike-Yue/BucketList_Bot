@@ -37,14 +37,14 @@ class MapHelper():
     def getLocationNameFromUrl(self, longUrl):
         # Truly terrible hacky code
         # Need to fix when I find a better way
-        startIndex = self.findNthOccurenceOfSubString(longUrl, "https://www.google.com/maps/place/q=", 1)
+        startIndex = self.findNthOccurenceOfSubString(longUrl, "google.com/maps/place/", 1)
         if(startIndex == -1):
-            startIndex = self.findNthOccurenceOfSubString(longUrl, "https://maps.google.com/maps?q=", 1)
-            longUrl = longUrl[startIndex+len("https://maps.google.com/maps?q="):]
+            startIndex = self.findNthOccurenceOfSubString(longUrl, "google.com/maps?q=", 1)
+            longUrl = longUrl[startIndex+len("google.com/maps?q="):]
             endIndex = self.findNthOccurenceOfSubString(longUrl, ",", 1)
             return urllib.parse.unquote(longUrl[:endIndex]).replace("+", " ")
         else:
-            longUrl = longUrl[startIndex+len("https://www.google.com/maps/place/"):]
+            longUrl = longUrl[startIndex+len("google.com/maps/place/"):]
             endIndex = self.findNthOccurenceOfSubString(longUrl, "/", 1)
             return urllib.parse.unquote(longUrl[:endIndex]).replace("+", " ")
     
@@ -56,15 +56,19 @@ class MapHelper():
         resp = session.head(mapsUrl, allow_redirects=True)
         coordinates = self.getCoordinatesFromUrl(resp.url)
         locationName = self.getLocationNameFromUrl(resp.url)
+        print(coordinates, locationName)
         
         # Aside from name and formatted_address, can also access key "types" to get a list
         # of categories this location is tagged with, such as ["Restaurant", "Food", "Establishment"]
         # For full list of types, refer to https://developers.google.com/maps/documentation/places/web-service/supported_types
         # Can also access the "business_status" field to see if location is OPERATIONAL, which may be helpful
         if (coordinates):
-            return self.gmaps.places(query=locationName, location=coordinates)["results"][0]
+            locations = self.gmaps.places(query=locationName, location=coordinates)["results"]
         else:
-            return self.gmaps.places(query=locationName)["results"][0]
+           locations = self.gmaps.places(query=locationName)["results"]
+        if locations:
+            return locations[0]
+        return None
         
         
 
