@@ -4,6 +4,7 @@ import googlemaps
 import requests
 import urllib.parse
 import os
+import time
 
 class MapHelper():
     
@@ -26,16 +27,26 @@ class MapHelper():
     
     def getCoordinatesFromUrl(self, longUrl):
         startIndex = self.findNthOccurenceOfSubString(longUrl, "@", 1)
+        if startIndex == -1:
+            return None
         longUrl = str(longUrl)[startIndex+1:]
         endIndex = self.findNthOccurenceOfSubString(longUrl, ",", 2)
         coordinatesList = longUrl[:endIndex].split(",")
         return (coordinatesList[0], coordinatesList[1])
         
     def getLocationNameFromUrl(self, longUrl):
-        startIndex = self.findNthOccurenceOfSubString(longUrl, "https://www.google.com/maps/place/", 1)
-        longUrl = longUrl[startIndex+len("https://www.google.com/maps/place/"):]
-        endIndex = self.findNthOccurenceOfSubString(longUrl, "/", 1)
-        return urllib.parse.unquote(longUrl[:endIndex]).replace("+", " ")
+        # Truly terrible hacky code
+        # Need to fix when I find a better way
+        startIndex = self.findNthOccurenceOfSubString(longUrl, "https://www.google.com/maps/place/q=", 1)
+        if(startIndex == -1):
+            startIndex = self.findNthOccurenceOfSubString(longUrl, "https://maps.google.com/maps?q=", 1)
+            longUrl = longUrl[startIndex+len("https://maps.google.com/maps?q="):]
+            endIndex = self.findNthOccurenceOfSubString(longUrl, ",", 1)
+            return urllib.parse.unquote(longUrl[:endIndex]).replace("+", " ")
+        else:
+            longUrl = longUrl[startIndex+len("https://www.google.com/maps/place/"):]
+            endIndex = self.findNthOccurenceOfSubString(longUrl, "/", 1)
+            return urllib.parse.unquote(longUrl[:endIndex]).replace("+", " ")
     
     # gmaps.places returns a list of locations that matches our search term
     # Return the first one since that's most likely the one that we meant
@@ -50,7 +61,10 @@ class MapHelper():
         # of categories this location is tagged with, such as ["Restaurant", "Food", "Establishment"]
         # For full list of types, refer to https://developers.google.com/maps/documentation/places/web-service/supported_types
         # Can also access the "business_status" field to see if location is OPERATIONAL, which may be helpful
-        return self.gmaps.places(query=locationName, location=coordinates)["results"][0]
+        if (coordinates):
+            return self.gmaps.places(query=locationName, location=coordinates)["results"][0]
+        else:
+            return self.gmaps.places(query=locationName)["results"][0]
         
         
 

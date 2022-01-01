@@ -7,6 +7,7 @@ import json
 import logging
 import os
 from .helper.viewHelper import ViewHelper
+from .helper.mapHelper import MapHelper
 
 LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.INFO)
@@ -31,6 +32,8 @@ class bucketListBotView(generic.View):
             return HttpResponse(self.request.GET['hub.challenge'])
         else:
             LOGGER.error("Invalid verify token received")
+            mapHelper = MapHelper()
+            locationDetails = mapHelper.getLocationDetails('https://goo.gl/maps/8By4gqDYErQRDzwVA')
             self.viewHelper.trackStateAndSendMessage("1", "maps", self.userStates)
             return HttpResponse('Error, invalid token')
     

@@ -18,6 +18,7 @@ loggingFormat = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(me
 fh.setFormatter(loggingFormat)
 
 #Enum class to contain all string output responses to the user
+#TODO: Add an error handling state
 class States(Enum):
     CONFIRM_LOCATION = "Question 1" # Can you confirm this is the location you meant?
     CONFIRM_DATE = "Question 2" # What date are you going on?
@@ -40,31 +41,70 @@ stateToOutputMessageMapping = {
     States.CONFIRM_ACTIVITY_CREATION: StringOutputHelper.FINALIZE_GOOGLE_MAPS_ACTIVITY.value
 }
 
+def confirmLocation(fbId, message, userStates):
+    locationDetails = mapHelper.getLocationDetails(message)
+    userFirstName = apiHelper.getSenderName(fbId)
+    apiHelper.sendFacebookMessage(fbId, stateToOutputMessageMapping[userStates[fbId]].format(userFirstName, locationDetails["name"], locationDetails["formatted_address"]))
+    return True
+
+def confirmDate(fbId, message, userStates):
+    if message.strip().casefold() == "yes".casefold():
+        #TODO: Build activity model for address and title since User confirmed this is the right location
+        #Send question asking them to confirm Date
+        apiHelper.sendFacebookMessage(fbId, stateToOutputMessageMapping[userStates[fbId]])
+        return True
+    elif message.strip().casefold() == "no".casefold():
+        apiHelper.sendFacebookMessage(fbId, StringOutputHelper.WRONG_GOOGLE_MAPS_OUTPUT.value)
+        return False
+    else:
+        apiHelper.sendFacebookMessage(fbId, StringOutputHelper.INVALID_TEXT_OUTPUT.value)
+        return False
+
+def confirmTime(fbId, message, userStates):
+    #TODO: Build activity model for Date since User provided a date. Handle usecase if no date is provided
+    apiHelper.sendFacebookMessage(fbId, stateToOutputMessageMapping[userStates[fbId]])
+    return True
+
+def confirmActivityType(fbId, message, userStates):
+    #TODO: Build activity model for time since User provided a time. Handle usecase if no time is provided
+    apiHelper.sendFacebookMessage(fbId, stateToOutputMessageMapping[userStates[fbId]])
+    return True
+
+def confirmActivityCreation(fbId, message, userStates):
+    #TODO: Build activity model for activity type since User provided a type. 
+    # Then return a string that contains the entire object that's been created
+    apiHelper.sendFacebookMessage(fbId, stateToOutputMessageMapping[userStates[fbId]])
+    return True
+
+stateToFunctionMapping = {
+    States.CONFIRM_LOCATION: confirmLocation,
+    States.CONFIRM_DATE: confirmDate,
+    States.CONFIRM_TIME: confirmTime,
+    States.CONFIRM_ACTIVITY_TYPE: confirmActivityType,
+    States.CONFIRM_ACTIVITY_CREATION: confirmActivityCreation
+}
+
 apiHelper = ApiHelper()
 mapHelper = MapHelper()
 
 class ViewHelper():
     
     def trackStateAndSendMessage(self, fbId, messageReceived, userStates):
-        print(userStates)
         try:
             if fbId not in userStates and "maps" in messageReceived:
                 userStates[fbId] = States.CONFIRM_LOCATION
-                locationDetails = mapHelper.getLocationDetails(messageReceived)
-                userFirstName = apiHelper.getSenderName(fbId)
-                apiHelper.sendFacebookMessage(fbId, stateToOutputMessageMapping[userStates[fbId]].format(userFirstName, locationDetails["name"], locationDetails["formatted_address"]))
-                #Move state to next
-                userStates[fbId] = nextStateMapping[userStates[fbId]]
+                if(stateToFunctionMapping[userStates[fbId]](fbId, messageReceived, userStates)):
+                    #Move state to next
+                    userStates[fbId] = nextStateMapping[userStates[fbId]]
             elif fbId not in userStates:
                 apiHelper.sendFacebookMessage(fbId, messageReceived)
             elif userStates[fbId] not in nextStateMapping:
-                apiHelper.sendFacebookMessage(fbId, stateToOutputMessageMapping[userStates[fbId]])
-                #Remove userID from state as the conversation is now complete
-                userStates.pop(fbId)
+                if(stateToFunctionMapping[userStates[fbId]](fbId, messageReceived, userStates)):
+                    #Remove userID from state as the conversation is now complete
+                    userStates.pop(fbId)
             else:
-                apiHelper.sendFacebookMessage(fbId, stateToOutputMessageMapping[userStates[fbId]])
-                #Move state to next
-                userStates[fbId] = nextStateMapping[userStates[fbId]]
+                if(stateToFunctionMapping[userStates[fbId]](fbId, messageReceived, userStates)):
+                    #Move state to next
+                    userStates[fbId] = nextStateMapping[userStates[fbId]]
         except Exception as e:
-            print(e)
             LOGGER.error(str(e))
