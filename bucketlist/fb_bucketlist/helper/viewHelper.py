@@ -6,6 +6,7 @@ from fb_bucketlist.helper.apiHelper import ApiHelper
 from fb_bucketlist.helper.mapHelper import MapHelper
 from fb_bucketlist.helper.stringOutputHelper import StringOutputHelper
 from fb_bucketlist.models import Activity
+from datetime import date
 
 LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.INFO)
@@ -13,6 +14,7 @@ if (os.name == 'nt'):
     fh = logging.FileHandler("application_log.log")
 else:
     fh = logging.FileHandler("/var/log/bucketlistbot.log")
+
 fh.setLevel(logging.INFO)
 LOGGER.addHandler(fh)
 loggingFormat = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -104,6 +106,16 @@ def confirmActivityCreation(fbId, message, userStates, activity=None):
     apiHelper.sendFacebookMessage(fbId, stateToOutputMessageMapping[userStates[fbId]])
     
     return True
+
+def dateValidator(inputDate):
+    # Joanne to implement checking passed in date to see if it's in the past.
+    # Takes in a python Date object
+    # Return true if in the past, false otherwise
+    today = date.today()
+    if (inputDate < today):
+        return True
+    else:
+        return False
 
 stateToFunctionMapping = {
     States.CONFIRM_LOCATION: confirmLocation,
